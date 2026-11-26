@@ -1,0 +1,6 @@
+{
+  "name": "CCLS / OAIC — Infrastructure de Stockage",
+  "description": "Cloud-synced grain storage infrastructure management platform for Oum El Bouaghi (Silos, Vaults, Warehouses, Proximity Centers & Seed Stations) accessible from any phone or computer worldwide.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

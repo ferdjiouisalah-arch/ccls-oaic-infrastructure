@@ -1,0 +1,203 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: deny everything by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core helper primitives
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Entity 1: UserProfile validation
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'language', 'bgPreset', 'bgDim', 'bgBlur', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'email', 'language', 'bgPreset', 'bgDim', 'bgBlur', 'createdAt', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 120))
+        && (!('email' in data) || (data.email is string && data.email.size() <= 200))
+        && data.language is string && data.language in ['fr', 'en', 'ar']
+        && data.bgPreset is string && data.bgPreset in ['slate', 'emerald', 'amber', 'blueprint']
+        && data.bgDim is number && data.bgDim >= 0.0 && data.bgDim <= 1.0
+        && data.bgBlur is number && data.bgBlur >= 0 && data.bgBlur <= 32
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Entity 2: Facility validation
+    function isValidFacility(data) {
+      return data.keys().hasAll([
+          'id', 'ownerId', 'fileNumber', 'type', 'name', 'code', 'location', 'owner',
+          'year', 'lat', 'lng', 'length', 'width', 'height', 'cellGroups',
+          'operationalQuintals', 'tremieCount', 'tremieRate', 'boisseauCount',
+          'boisseauRate', 'isDeleted', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'ownerId', 'fileNumber', 'type', 'customTypeLabel', 'name', 'code',
+          'location', 'owner', 'year', 'lat', 'lng', 'length', 'width', 'height',
+          'cellGroups', 'operationalQuintals', 'tremieCount', 'tremieRate',
+          'boisseauCount', 'boisseauRate', 'elevateur', 'transporteur',
+          'pontBascule', 'ventilation', 'perfRec', 'perfExp', 'obsFr', 'obsEn',
+          'isDeleted', 'deletedAt', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id)
+        && isValidId(data.ownerId)
+        && data.ownerId == request.auth.uid
+        && data.fileNumber is number && data.fileNumber >= 0 && data.fileNumber <= 100000
+        && data.type is string && data.type in ['complexe', 'unite', 'silo', 'voute', 'hangar', 'proximity', 'seeds', 'custom']
+        && (!('customTypeLabel' in data) || (data.customTypeLabel is string && data.customTypeLabel.size() <= 80))
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 200
+        && data.code is string && data.code.size() <= 40
+        && data.location is string && data.location.size() <= 200
+        && data.owner is string && data.owner.size() <= 80
+        && data.year is string && data.year.size() <= 32
+        && data.lat is string && data.lat.size() <= 32
+        && data.lng is string && data.lng.size() <= 32
+        && data.length is number && data.length >= 0 && data.length <= 10000
+        && data.width is number && data.width >= 0 && data.width <= 10000
+        && data.height is number && data.height >= 0 && data.height <= 1000
+        && data.cellGroups is list && data.cellGroups.size() <= 20
+        && (data.cellGroups.size() == 0 || (
+          data.cellGroups[0] is map
+          && data.cellGroups[0].keys().hasAll(['label', 'count', 'unitQuintals'])
+          && data.cellGroups[0].keys().hasOnly(['label', 'count', 'unitQuintals'])
+          && data.cellGroups[0].label is string && data.cellGroups[0].label.size() <= 120
+          && data.cellGroups[0].count is number && data.cellGroups[0].count >= 0
+          && data.cellGroups[0].unitQuintals is number && data.cellGroups[0].unitQuintals >= 0
+        ))
+        && data.operationalQuintals is number && data.operationalQuintals >= 0
+        && data.tremieCount is number && data.tremieCount >= 0
+        && data.tremieRate is number && data.tremieRate >= 0
+        && data.boisseauCount is number && data.boisseauCount >= 0
+        && data.boisseauRate is number && data.boisseauRate >= 0
+        && (!('elevateur' in data) || (data.elevateur is string && data.elevateur.size() <= 160))
+        && (!('transporteur' in data) || (data.transporteur is string && data.transporteur.size() <= 160))
+        && (!('pontBascule' in data) || (data.pontBascule is string && data.pontBascule.size() <= 160))
+        && (!('ventilation' in data) || (data.ventilation is string && data.ventilation.size() <= 240))
+        && (!('perfRec' in data) || (data.perfRec is string && data.perfRec.size() <= 160))
+        && (!('perfExp' in data) || (data.perfExp is string && data.perfExp.size() <= 160))
+        && (!('obsFr' in data) || (data.obsFr is string && data.obsFr.size() <= 1000))
+        && (!('obsEn' in data) || (data.obsEn is string && data.obsEn.size() <= 1000))
+        && data.isDeleted is bool
+        && (!('deletedAt' in data) || data.deletedAt is number)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Entity 3: FacilityPhoto validation
+    function isValidFacilityPhoto(data) {
+      return data.keys().hasAll(['id', 'ownerId', 'facilityId', 'caption', 'dataUrl', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'ownerId', 'facilityId', 'caption', 'dataUrl', 'createdAt', 'updatedAt'])
+        && isValidId(data.id)
+        && isValidId(data.ownerId)
+        && isValidId(data.facilityId)
+        && data.ownerId == request.auth.uid
+        && data.caption is string && data.caption.size() <= 200
+        && data.dataUrl is string && data.dataUrl.size() >= 10 && data.dataUrl.size() <= 600000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Collection 1: /users/{userId} (PII strictly owner-only)
+    match /users/{userId} {
+      allow get: if isVerifiedUser() && isValidId(userId) && request.auth.uid == userId;
+      allow list: if false;
+      allow create: if isVerifiedUser()
+        && isValidId(userId)
+        && request.auth.uid == userId
+        && isValidUserProfile(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(userId)
+        && request.auth.uid == userId
+        && isValidUserProfile(incoming())
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'email', 'language', 'bgPreset', 'bgDim', 'bgBlur', 'updatedAt']);
+      allow delete: if false;
+    }
+
+    // Collection 2: /facilities/{facilityId}
+    match /facilities/{facilityId} {
+      allow get: if isVerifiedUser() && isValidId(facilityId) && existing().ownerId == request.auth.uid;
+      allow list: if isVerifiedUser() && resource.data.ownerId == request.auth.uid;
+      allow create: if isVerifiedUser()
+        && isValidId(facilityId)
+        && isValidFacility(incoming())
+        && incoming().id == facilityId
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(facilityId)
+        && isValidFacility(incoming())
+        && existing().ownerId == request.auth.uid
+        && incoming().ownerId == existing().ownerId
+        && incoming().id == existing().id
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          // Action 1: Full facility edit
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'type', 'customTypeLabel', 'name', 'code', 'location', 'owner', 'year',
+            'lat', 'lng', 'length', 'width', 'height', 'cellGroups',
+            'operationalQuintals', 'tremieCount', 'tremieRate', 'boisseauCount',
+            'boisseauRate', 'elevateur', 'transporteur', 'pontBascule',
+            'ventilation', 'perfRec', 'perfExp', 'obsFr', 'obsEn', 'updatedAt'
+          ])
+          // Action 2: Soft delete or restore to/from Trash
+          || incoming().diff(existing()).affectedKeys().hasOnly(['isDeleted', 'deletedAt', 'updatedAt'])
+          // Action 3: GPS quick capture
+          || incoming().diff(existing()).affectedKeys().hasOnly(['lat', 'lng', 'updatedAt'])
+        );
+      allow delete: if isVerifiedUser() && isValidId(facilityId) && existing().ownerId == request.auth.uid;
+    }
+
+    // Collection 3: /facility_photos/{photoId}
+    match /facility_photos/{photoId} {
+      allow get: if isVerifiedUser() && isValidId(photoId) && existing().ownerId == request.auth.uid;
+      allow list: if isVerifiedUser() && resource.data.ownerId == request.auth.uid;
+      allow create: if isVerifiedUser()
+        && isValidId(photoId)
+        && isValidFacilityPhoto(incoming())
+        && incoming().id == photoId
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && exists(/databases/$(database)/documents/facilities/$(incoming().facilityId))
+        && get(/databases/$(database)/documents/facilities/$(incoming().facilityId)).data.ownerId == request.auth.uid;
+      allow update: if isVerifiedUser()
+        && isValidId(photoId)
+        && isValidFacilityPhoto(incoming())
+        && existing().ownerId == request.auth.uid
+        && incoming().ownerId == existing().ownerId
+        && incoming().id == existing().id
+        && incoming().facilityId == existing().facilityId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['caption', 'updatedAt']);
+      allow delete: if isVerifiedUser() && isValidId(photoId) && existing().ownerId == request.auth.uid;
+    }
+  }
+}

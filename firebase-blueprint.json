@@ -1,0 +1,259 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User workspace preferences and identity metadata",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "bgPreset": {
+          "type": "string",
+          "enum": ["slate", "emerald", "amber", "blueprint"],
+          "maxLength": 32
+        },
+        "bgDim": {
+          "type": "number"
+        },
+        "bgBlur": {
+          "type": "number"
+        },
+        "language": {
+          "type": "string",
+          "enum": ["fr", "en", "ar"],
+          "maxLength": 8
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "language", "bgPreset", "bgDim", "bgBlur", "createdAt", "updatedAt"]
+    },
+    "Facility": {
+      "title": "Facility",
+      "description": "Grain storage facility technical sheet (silo, vault, warehouse, proximity center, seed station, complex, unit)",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "fileNumber": {
+          "type": "number"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["complexe", "unite", "silo", "voute", "hangar", "proximity", "seeds", "custom"],
+          "maxLength": 32
+        },
+        "customTypeLabel": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "code": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "location": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "owner": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "year": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "lat": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "lng": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "length": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "cellGroups": {
+          "type": "array",
+          "description": "Bounded list of up to 20 cell groups"
+        },
+        "operationalQuintals": {
+          "type": "number"
+        },
+        "tremieCount": {
+          "type": "number"
+        },
+        "tremieRate": {
+          "type": "number"
+        },
+        "boisseauCount": {
+          "type": "number"
+        },
+        "boisseauRate": {
+          "type": "number"
+        },
+        "elevateur": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "transporteur": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "pontBascule": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "ventilation": {
+          "type": "string",
+          "maxLength": 240
+        },
+        "perfRec": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "perfExp": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "obsFr": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "obsEn": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "isDeleted": {
+          "type": "boolean"
+        },
+        "deletedAt": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "fileNumber",
+        "type",
+        "name",
+        "code",
+        "location",
+        "owner",
+        "year",
+        "lat",
+        "lng",
+        "length",
+        "width",
+        "height",
+        "cellGroups",
+        "operationalQuintals",
+        "tremieCount",
+        "tremieRate",
+        "boisseauCount",
+        "boisseauRate",
+        "isDeleted",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "FacilityPhoto": {
+      "title": "FacilityPhoto",
+      "description": "Compressed site inspection photo belonging to a specific facility",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "facilityId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "caption": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "dataUrl": {
+          "type": "string",
+          "maxLength": 600000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "ownerId", "facilityId", "caption", "dataUrl", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private user profile and workspace preferences scoped strictly to the authenticated owner"
+    },
+    "/facilities/{facilityId}": {
+      "schema": { "$ref": "#/entities/Facility" },
+      "description": "CCLS / OAIC grain storage facilities scoped to ownerId"
+    },
+    "/facility_photos/{photoId}": {
+      "schema": { "$ref": "#/entities/FacilityPhoto" },
+      "description": "Inspection photos linked to a facility and scoped to ownerId"
+    }
+  }
+}
